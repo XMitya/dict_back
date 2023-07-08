@@ -9,8 +9,8 @@ const pool = new Pool({
 
 exports.db = {
     nextPhrases: async (qty, lang) => {
-        qty = qty ? qty : 5
-        lang = lang ? lang : 'en'
+        qty = qty ?? 5
+        lang = lang ?? 'en'
         const sql = `
             with random_rows as (select
                 *

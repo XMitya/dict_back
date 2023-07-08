@@ -117,14 +117,14 @@ const methods = {
     },
 
     getPairs: async (srcLang, tgtLang, pageSize, pageNum) => {
-        pageSize = pageSize ? pageSize : 10
-        pageNum = pageNum ? pageNum : 0
-        srcLang = srcLang ? srcLang : 'en'
-        tgtLang = tgtLang ? tgtLang : 'ru'
+        pageSize = pageSize ?? 10
+        pageNum = pageNum ?? 0
+        srcLang = srcLang ?? 'en'
+        tgtLang = tgtLang ?? 'ru'
 
-        const total = await db.countPairs(srcLang, tgtLang)
+        const total = (await db.countPairs(srcLang, tgtLang)).rows[0].cnt
         const pairs = []
-        if (total.rows[0].cnt > 0) {
+        if (total > 0) {
             const loadedPairs = await db.getPairs(srcLang, tgtLang, pageSize, pageNum)
             for (let row of loadedPairs.rows) {
                 const pair = {}
@@ -144,7 +144,7 @@ const methods = {
             pairs: pairs,
             pageSize: pageSize,
             pageNum: pageNum,
-            pages: Math.ceil(total.rows[0].cnt / pageSize)
+            pages: Math.ceil(total / pageSize)
         }
     },
 
