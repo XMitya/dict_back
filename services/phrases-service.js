@@ -45,8 +45,12 @@ const methods = {
         }
     },
 
+    _sanitizeValue: value => {
+        return ('' + value).trim().toLowerCase()
+    },
+
     _existsTranslation: (translations, targetValue) => {
-        const sanitized = ('' + targetValue).trim().toLowerCase()
+        const sanitized = this.phrasesService._sanitizeValue(targetValue)
         return !!translations.rows.find(row => sanitized === row.tgt_value)
     },
 
@@ -112,6 +116,65 @@ const methods = {
         return mocks.checkResult
     },
 
+    getPairs: async (srcLang, tgtLang, pageSize, pageNum) => {
+        pageSize = pageSize ? pageSize : 10
+        pageNum = pageNum ? pageNum : 0
+        srcLang = srcLang ? srcLang : 'en'
+        tgtLang = tgtLang ? tgtLang : 'ru'
+
+        const total = await db.countPairs(srcLang, tgtLang)
+        const pairs = []
+        if (total.rows[0].cnt > 0) {
+            const loadedPairs = await db.getPairs(srcLang, tgtLang, pageSize, pageNum)
+            for (let row of loadedPairs.rows) {
+                const pair = {}
+                pair[row.src_lang] = {
+                    id: row.src_id,
+                    value: row.src_value
+                }
+                pair[row.tgt_lang] = {
+                    id: row.tgt_id,
+                    value: row.tgt_value
+                }
+                pairs.push(pair)
+            }
+        }
+
+        return {
+            pairs: pairs,
+            pageSize: pageSize,
+            pageNum: pageNum,
+            pages: Math.ceil(total.rows[0].cnt / pageSize)
+        }
+    },
+
+    addPairs: async (pairsToAdd) => {
+        const addedPairs = []
+        for (let pair of pairsToAdd) {
+            const langs = []
+            for (let lang in pair) {
+                langs.push(lang)
+            }
+
+            const src = pair[langs[0]]
+            const tgt = pair[langs[1]]
+            const sanitize = this.phrasesService._sanitizeValue
+            const {srcPhrase, tgtPhrase} = await db.addTranslation(sanitize(src.value), langs[0], sanitize(tgt.value), langs[1])
+            const addedPair = {}
+
+            for (let phrase of [srcPhrase, tgtPhrase]) {
+                const row = phrase.rows[0]
+                addedPair[row.lang] = {
+                    id: row.ph_id,
+                    value: row.value
+                }
+            }
+
+            addedPairs.push(addedPair)
+        }
+
+        return addedPairs
+    }
 }
 
 exports.phrasesService = methods

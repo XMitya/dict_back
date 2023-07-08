@@ -124,5 +124,108 @@ exports.db = {
                         updated_at = current_timestamp;
             `
         return await this.db._setStatAndQuery(sql, phraseId, targetLanguage)
-    }
+    },
+
+    _getOrUpdatePhrase: async (client, phrase, lang) => {
+        const phraseSql = `select * from public.phrases where value = $1 and lang = $2`
+        const phraseInsertSql = `insert into public.phrases(lang, value) VALUES ($2, $1);`
+        let loaded = await client.query(phraseSql, [phrase, lang])
+
+        if (loaded.rowCount === 0) {
+            await client.query(phraseInsertSql, [phrase, lang])
+            loaded = await client.query(phraseSql, [phrase, lang])
+        }
+
+        return loaded
+    },
+
+    _getOrCreateTranslation: async (client, ph1Id, ph2Id) => {
+        const sql = `select * from public.translation where 
+                                     ph_1_id = $1::uuid and ph_2_id = $2::uuid or 
+                                               ph_2_id = $1::uuid and ph_1_id = $2::uuid;`
+
+        let loaded = await client.query(sql, [ph1Id, ph2Id])
+        if (loaded.rowCount === 0) {
+            await client.query(`insert into public.translation (ph_1_id, ph_2_id) VALUES ($1::uuid, $2::uuid);`, [ph1Id, ph2Id])
+            loaded = await client.query(sql, [ph1Id, ph2Id])
+        }
+
+        return loaded
+    },
+
+    // admin functions
+    addTranslation: async (srcPhrase, srcLang, tgtPhrase, tgtLang) => {
+        const client = await pool.connect()
+        try {
+            await client.query('begin')
+            const srcRes = await this.db._getOrUpdatePhrase(client, srcPhrase, srcLang)
+            const tgtRes = await this.db._getOrUpdatePhrase(client, tgtPhrase, tgtLang)
+
+            await this.db._getOrCreateTranslation(client, srcRes.rows[0].ph_id, tgtRes.rows[0].ph_id)
+            await client.query('commit')
+            return {
+                srcPhrase: srcRes,
+                tgtPhrase: tgtRes
+            }
+        } catch (e) {
+            await client.query('rollback')
+        } finally {
+            client.release()
+        }
+    },
+
+    getPairs: async (srcLang, tgtLang, pageSize, pageNum) => {
+        const sql = `
+            select
+                src.ph_id as src_id,
+                src.value as src_value,
+                src.lang as src_lang,
+                tgt.ph_id as tgt_id,
+                tgt.value as tgt_value,
+                tgt.lang as tgt_lang
+            from
+                public.phrases src
+            join
+                public.translation tr
+            on
+                src.ph_id in (tr.ph_1_id, tr.ph_2_id)
+            join
+                public.phrases tgt
+            on
+                tgt.ph_id in (tr.ph_1_id, tr.ph_2_id)
+            where
+                src.lang = $1 and
+                tgt.lang = $2 and
+                src.ph_id != tgt.ph_id
+            order by src.value
+                limit $3 offset $4;
+        `
+
+        const offset = pageSize * pageNum
+
+        return await pool.query(sql, [srcLang, tgtLang, pageSize, offset])
+    },
+
+    countPairs: async(srcLang, tgtLang) => {
+        const sql = `
+            select
+                count(1) as cnt
+            from
+                public.phrases src
+            join
+                public.translation tr
+            on
+                src.ph_id in (tr.ph_1_id, tr.ph_2_id)
+            join
+                public.phrases tgt
+            on
+                tgt.ph_id in (tr.ph_1_id, tr.ph_2_id)
+            where
+                src.lang = $1 and
+                tgt.lang = $2 and
+                src.ph_id != tgt.ph_id
+        `
+
+        return await pool.query(sql, [srcLang, tgtLang])
+    },
 }

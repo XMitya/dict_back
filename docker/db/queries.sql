@@ -102,3 +102,35 @@ order by
 limit 5;
 
 -- select * from public.phrases tablesample system()
+
+select * from public.phrases where value = 'hello' and lang = 'en';
+select * from public.phrases where value = 'привет' and lang = 'ru';
+
+insert into public.phrases(lang, value) VALUES ($1, $2);
+
+select * from public.translation where ph_1_id = $1::uuid and ph_2_id = $2::uuid or ph_2_id = $1::uuid and ph_1_id = $2::uuid;
+
+insert into public.translation (ph_1_id, ph_2_id) VALUES ($1, $2);
+
+select
+    src.ph_id as src_id,
+    src.value as src_value,
+    src.lang as src_lang,
+    tgt.ph_id as tgt_id,
+    tgt.value as tgt_value,
+    tgt.lang as tgt_lang
+from
+    public.phrases src
+join
+    public.translation tr
+on
+    src.ph_id in (tr.ph_1_id, tr.ph_2_id)
+join
+    public.phrases tgt
+on
+    tgt.ph_id in (tr.ph_1_id, tr.ph_2_id)
+where
+    src.lang = 'en' and
+    src.ph_id != tgt.ph_id
+order by src.value
+limit $1 offset $2;

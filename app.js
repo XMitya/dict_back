@@ -7,6 +7,7 @@ const bodyParser = require('body-parser')
 const cors = require('cors')
 
 const testRouter = require('./routes/v1/test');
+const adminRouter = require('./routes/v1/admin');
 
 const app = express();
 
@@ -24,6 +25,7 @@ app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
 app.use('/v1', testRouter);
+app.use('/v1/admin', adminRouter);
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
