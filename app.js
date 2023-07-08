@@ -14,6 +14,7 @@ const app = express();
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'pug');
 
+// Disable CORS
 app.use(cors({origin: true}))
 app.use(bodyParser.json())
 app.use(logger('dev'));

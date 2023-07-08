@@ -1,0 +1,1 @@
+select * from public.phrases where lang = 'en' limit 5;

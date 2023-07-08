@@ -1,8 +1,21 @@
-const mocks = require("./mocks");
+const mocks = require("./mocks").mocks;
+const db = require("./db").db
 
 const methods = {
-    getNextRandomPhrases: function () {
-        return mocks.mocks.phrases
+    getNextRandomPhrases: async function (qty, lang) {
+        const loaded = await db.nextPhrases(qty, lang)
+        console.log(loaded)
+        const res = []
+        for (let row of loaded.rows) {
+            const val = {}
+            val[row.lang] = {
+                id: row.ph_id,
+                value: row.value
+            }
+            res.push(val)
+        }
+        console.log(res)
+        return res
     },
 
     checkPhrases: function (inputPhrases) {
@@ -11,7 +24,7 @@ const methods = {
         } else {
             console.log(`No input received`)
         }
-        return mocks.mocks.checkResult
+        return mocks.checkResult
     }
 }
 

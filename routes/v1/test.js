@@ -4,11 +4,11 @@ const router = express.Router();
 const bodyParser = require('body-parser')
 
 /* GET home page. */
-router.get('/phrases', function(req, res, next) {
+router.get('/phrases', async function(req, res, next) {
     res.set({
         'Content-Type': 'application/json'
     })
-    res.send(phrasesService.phrasesService.getNextRandomPhrases())
+    res.send(await phrasesService.phrasesService.getNextRandomPhrases(req.query.qty, req.query.lang))
 });
 
 router.post('/check', function(req, res) {
