@@ -75,3 +75,30 @@ on conflict (ph_id, target_language) do update
         updated_at = current_timestamp;
 
 delete from public.stats where true;
+
+
+select * from public.phrases where lang = 'en' order by random() limit 100;
+
+with random_rows as (select
+    *
+from
+    public.phrases
+where
+    lang = 'en'
+order by random()
+limit
+    100)
+
+select
+    rr.*
+from
+    random_rows rr
+left join
+    stats s
+on
+    s.ph_id = rr.ph_id
+order by
+    (s.tries / s.failed_tries) nulls first
+limit 5;
+
+-- select * from public.phrases tablesample system()

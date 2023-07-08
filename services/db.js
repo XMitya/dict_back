@@ -11,7 +11,31 @@ exports.db = {
     nextPhrases: async (qty, lang) => {
         qty = qty ? qty : 5
         lang = lang ? lang : 'en'
-        return await pool.query("select * from public.phrases where lang = $1 limit $2", [lang, qty])
+        const sql = `
+            with random_rows as (select
+                *
+            from
+                public.phrases
+            where
+                lang = $1
+            order by random()
+            limit
+                100)
+
+            select
+                rr.*
+            from
+                random_rows rr
+            left join
+                stats s
+            on
+                s.ph_id = rr.ph_id
+            order by
+                (s.tries / s.failed_tries) nulls first
+            limit $2;
+        `
+
+        return await pool.query(sql, [lang, qty])
     },
     findTranslations: async (srcPhraseId, targetLanguage) => {
         const qry = `
