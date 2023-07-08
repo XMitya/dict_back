@@ -5,7 +5,8 @@ create table if not exists public.phrases
 (
     ph_id uuid default gen_random_uuid() primary key,
     lang char(2),
-    value varchar
+    value varchar,
+    unique (lang, value)
 );
 
 create table if not exists public.translation (

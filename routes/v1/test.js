@@ -1,7 +1,6 @@
 const express = require('express');
 const phrasesService = require('../../services/phrases-service')
 const router = express.Router();
-const bodyParser = require('body-parser')
 
 /* GET home page. */
 router.get('/phrases', async function(req, res, next) {
@@ -11,8 +10,8 @@ router.get('/phrases', async function(req, res, next) {
     res.send(await phrasesService.phrasesService.getNextRandomPhrases(req.query.qty, req.query.lang))
 });
 
-router.post('/check', function(req, res) {
-    const checked = phrasesService.phrasesService.checkPhrases(req.body)
+router.post('/check', async function(req, res) {
+    const checked = await phrasesService.phrasesService.checkPhrases(req.body)
     res.set({
         'Content-Type': 'application/json'
     })
