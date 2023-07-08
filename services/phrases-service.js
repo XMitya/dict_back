@@ -69,6 +69,14 @@ const methods = {
         }
 
         if (foundTranslations) {
+            const success = this.phrasesService._existsTranslation(translations, tgt.value)
+            // Don't care that query and stat update happens in separate transactions.
+            const rawStat = await (success
+            ? db.setSuccessStat(src.id, tgt.language)
+            : db.setFailureStat(src.id, tgt.language))
+
+            const stat = rawStat.rows[0]
+
             res[tgt.language] = {
                 correctPhrases: translations.rows.map(row => {
                     return {
@@ -78,9 +86,9 @@ const methods = {
                 }),
                 checkResult: {
                     enteredValue: tgt.value,
-                    success: this.phrasesService._existsTranslation(translations, tgt.value),
-                    tries: 1,
-                    failures: 0
+                    success: success,
+                    tries: stat.tries,
+                    failures: stat.failed_tries
                 }
             }
         } else { // translation not found

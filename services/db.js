@@ -59,5 +59,46 @@ exports.db = {
         `
 
         return await pool.query(qry, [srcPhraseId, targetLanguage])
+    },
+
+    _setStatAndQuery: async (sql, phraseId, targetLanguage) => {
+        const client = await pool.connect()
+        try {
+            await client.query('begin')
+            await client.query(sql, [phraseId, targetLanguage])
+            const stats = await client.query("select * from public.stats where ph_id = $1::uuid and target_language = $2;", [phraseId, targetLanguage]);
+            await client.query('commit')
+            return stats
+        } catch (e) {
+            await client.query('rollback')
+            throw e
+        } finally {
+            client.release()
+        }
+    },
+
+    setSuccessStat: async (phraseId, targetLanguage) => {
+        const sql = `
+                    insert into public.stats (ph_id, target_language, tries, failed_tries)
+                    values ($1::uuid, $2, 1, 0)
+                    on conflict (ph_id, target_language) do update
+                    set
+                        tries = stats.tries + 1,
+                        updated_at = current_timestamp;
+            `
+        return await this.db._setStatAndQuery(sql, phraseId, targetLanguage)
+    },
+
+    setFailureStat: async (phraseId, targetLanguage) => {
+        const sql = `
+                    insert into public.stats (ph_id, target_language, tries, failed_tries)
+                    values ($1::uuid, $2, 1, 1)
+                    on conflict (ph_id, target_language) do update
+                    set
+                        tries = stats.tries + 1,
+                        failed_tries = stats.failed_tries + 1,
+                        updated_at = current_timestamp;
+            `
+        return await this.db._setStatAndQuery(sql, phraseId, targetLanguage)
     }
 }

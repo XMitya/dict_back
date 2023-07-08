@@ -1,5 +1,6 @@
 drop table if exists public.phrases;
 drop table if exists public.translation;
+drop table if exists public.stats;
 
 create table if not exists public.phrases
 (
@@ -13,6 +14,16 @@ create table if not exists public.translation (
     t_id uuid default gen_random_uuid() primary key,
     ph_1_id uuid not null,
     ph_2_id uuid not null
+);
+
+create table if not exists public.stats (
+    ph_id uuid,
+    target_language char(2),
+    tries int,
+    failed_tries int,
+    updated_at timestamp not null default current_timestamp,
+    created_at timestamp not null default current_timestamp,
+    primary key (ph_id, target_language)
 );
 
 -- Fill with data

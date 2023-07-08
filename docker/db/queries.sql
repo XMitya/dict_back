@@ -42,3 +42,36 @@ where
     t.ph_2_id = '071d3d5b-e396-46c9-9887-c8b71d810b3a' and
     p2.lang = 'ru';
 
+select * from public.stats;
+
+-- update statistics
+-- failure
+insert into public.stats (ph_id, target_language, tries, failed_tries)
+values ('071d3d5b-e396-46c9-9887-c8b71d810b3a', 'ru', 1, 1)
+on conflict (ph_id, target_language) do update
+set
+    tries = tries + 1,
+    failed_tries = stats.failed_tries + 1,
+    updated_at = current_timestamp;
+
+-- success
+insert into public.stats (ph_id, target_language, tries, failed_tries)
+values ('071d3d5b-e396-46c9-9887-c8b71d810b3a', 'ru', 1, 0)
+on conflict (ph_id, target_language) do update
+set
+    tries = stats.tries + 1,
+    updated_at = current_timestamp;
+
+
+
+
+insert into public.stats (ph_id, target_language, tries, failed_tries)
+values ('071d3d5b-e396-46c9-9887-c8b71d810b3a', 'ru', 1, 1)
+
+on conflict (ph_id, target_language) do update
+    set
+        tries = stats.tries + 1,
+        failed_tries = stats.failed_tries + 1,
+        updated_at = current_timestamp;
+
+delete from public.stats where true;
