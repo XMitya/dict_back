@@ -1,5 +1,7 @@
 const mocks = require("./mocks").mocks;
 const db = require("./db").db
+const fs = require("fs")
+const csvParser = require("csv-parser")
 
 const methods = {
     getNextRandomPhrases: async function (qty, lang) {
@@ -174,6 +176,15 @@ const methods = {
         }
 
         return addedPairs
+    },
+
+    preloadPairs: async () => {
+        const sanitize = this.phrasesService._sanitizeValue
+        return fs.createReadStream("preload_phrases.csv")
+            .pipe(csvParser())
+            .on("data", async pair => {
+                await db.addTranslation(sanitize(pair.en), 'en', sanitize(pair.ru), 'ru')
+            })
     }
 }
 

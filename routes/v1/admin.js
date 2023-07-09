@@ -18,4 +18,12 @@ router.post('/add-pairs', async function(req, res) {
     res.send(addedPairs)
 })
 
+router.post('/preload', async function(req, res) {
+    await phrasesService.preloadPairs()
+    res.set({
+        'Content-Type': 'application/json'
+    })
+    res.send({success: true})
+})
+
 module.exports = router;
