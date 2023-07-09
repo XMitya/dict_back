@@ -134,3 +134,15 @@ where
     src.ph_id != tgt.ph_id
 order by src.value
 limit $1 offset $2;
+
+
+select * from public.phrases p
+join public.translation t
+on p.ph_id in (t.ph_1_id, t.ph_2_id)
+where p.value = 'cleavage';
+
+
+select * from public.phrases p
+where p.value = 'расщепление';
+
+

@@ -31,7 +31,7 @@ exports.db = {
             on
                 s.ph_id = rr.ph_id
             order by
-                (s.tries / s.failed_tries) nulls first
+                (s.tries / case when s.failed_tries = 0 then 1 else s.failed_tries end) nulls first
             limit $2;
         `
 
