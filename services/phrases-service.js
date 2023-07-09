@@ -119,8 +119,8 @@ const methods = {
     },
 
     getPairs: async (srcLang, tgtLang, pageSize, pageNum) => {
-        pageSize = pageSize ?? 10
-        pageNum = pageNum ?? 0
+        pageSize = Number(pageSize ?? 10)
+        pageNum = Number(pageNum ?? 0)
         srcLang = srcLang ?? 'en'
         tgtLang = tgtLang ?? 'ru'
 

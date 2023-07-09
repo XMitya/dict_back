@@ -5,6 +5,8 @@ const cookieParser = require('cookie-parser');
 const logger = require('morgan');
 const bodyParser = require('body-parser')
 const cors = require('cors')
+const swaggerJsdoc = require("swagger-jsdoc");
+const swaggerUi = require("swagger-ui-express");
 
 const testRouter = require('./routes/v1/test');
 const adminRouter = require('./routes/v1/admin');
@@ -26,6 +28,36 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 app.use('/v1', testRouter);
 app.use('/v1/admin', adminRouter);
+
+// Swagger
+const options = {
+  definition: {
+    openapi: "3.1.0",
+    info: {
+      title: "Dictionary service",
+      version: "0.1.0",
+      description:
+          "Simple API for dictionary with statistics",
+      license: {
+        name: "MIT",
+        url: "https://spdx.org/licenses/MIT.html",
+      },
+    },
+    servers: [
+      {
+        url: "http://localhost:3000",
+      },
+    ],
+  },
+  apis: ["./routes/v1/*.js"],
+};
+
+const specs = swaggerJsdoc(options);
+app.use(
+    "/api-docs",
+    swaggerUi.serve,
+    swaggerUi.setup(specs)
+);
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {

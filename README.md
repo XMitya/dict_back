@@ -34,6 +34,10 @@ npm start
 
 ## Endpoints
 
+### Swagger
+
+http://localhost:3000/api-docs/
+
 ```
 GET localhost:3000/v1/phrases?lang=en&qty=5
 
@@ -121,32 +125,6 @@ Content-Type: application/json; charset=utf-8
     }
   }
 ]
-
-
-### Add pair 2
-
-POST localhost:3000/v1/admin/add-pairs
-Content-Type: application/json; charset=utf-8
-
-[
-  {
-    "en": {
-      "value": "girl"
-    },
-    "ru": {
-      "value": "девочка"
-    }
-  },
-  {
-    "en": {
-      "value": "girl"
-    },
-    "ru": {
-      "value": "девушка"
-    }
-  }
-]
-
 
 ### Preload data from preload_phrases.csv
 
