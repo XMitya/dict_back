@@ -42,19 +42,19 @@ const options = {
         name: "MIT",
         url: "https://spdx.org/licenses/MIT.html",
       },
-    },
-    servers: [
-      {
-        url: "http://localhost:3000",
-      },
-    ],
+    }
   },
   apis: ["./routes/v1/*.js"],
 };
 
 const specs = swaggerJsdoc(options);
 app.use(
-    "/api-docs",
+    "/api-docs", 
+    function(req, res, next){
+            specs.host = req.get('host');
+                req.swaggerDoc = specs;
+                    next();
+    },
     swaggerUi.serve,
     swaggerUi.setup(specs)
 );
